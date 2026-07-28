@@ -119,6 +119,47 @@ await writeFile(
   "utf8",
 );
 
+/**
+ * Eski sitenin adresleri.
+ *
+ * Site aynı taban adreste yayınlandığı için, elinde eski bir link, yer imi ya
+ * da paylaşılmış bir adres kalan herkes 404 alıyordu. GitHub Pages sunucu
+ * tarafında yönlendirme yapamaz; bu yüzden her eski adrese meta refresh + JS
+ * yönlendirmesi taşıyan küçük bir sayfa yazıyoruz. Tarayıcısı ikisini de
+ * çalıştırmayan biri için görünür bir bağlantı da bırakılıyor.
+ *
+ * index.html bilerek listede yok: ana sayfanın kendisi orada duruyor.
+ */
+const legacyRedirects = {
+  "dernegimiz.html": "/hakkimizda/tarihce",
+  "koyumuz.html": "/koyumuz/tarih",
+  "faaliyetlerimiz.html": "/faaliyetler",
+  "duyurular.html": "/haberler",
+  "iletisim.html": "/iletisim",
+  "canli.html": "/canli/koy",
+  "uye-ol.html": "/hakkimizda/uyelik",
+  "vefat-taziye.html": "/faaliyetler/taziye",
+  "admin.html": "/",
+};
+
+for (const [from, to] of Object.entries(legacyRedirects)) {
+  const target = `${base}${to}`;
+  await writeFile(
+    join(outDir, from),
+    `<!doctype html>
+<html lang="tr">
+<meta charset="utf-8">
+<title>Sayfa taşındı — Elazığ Dörtbölük Köyü Derneği</title>
+<link rel="canonical" href="${target}">
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0; url=${target}">
+<script>location.replace(${JSON.stringify(target)})</script>
+<p>Bu sayfa taşındı. <a href="${target}">Yeni adrese gidin</a>.</p>
+`,
+    "utf8",
+  );
+}
+
 async function dirSize(dir) {
   let total = 0;
   for (const entry of await readdir(dir, { withFileTypes: true })) {
