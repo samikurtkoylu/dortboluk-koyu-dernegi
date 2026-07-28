@@ -42,13 +42,44 @@ async function render(route) {
   return response.text();
 }
 
+/**
+ * Kaydırılması gereken kök adlar: derlenmiş istemci çıktısının en üst düzeyi
+ * (assets/, fonts/, favicon.svg, …) ve rotaların ilk parçası (mezralar,
+ * hakkimizda, …). Bunlar bilinmeden yol mu yoksa düz metin mi olduğu
+ * ayırt edilemez.
+ */
+const clientRoots = await readdir(join(root, "dist", "client"));
+const routeRoots = [
+  ...new Set(routes.filter((r) => r !== "/").map((r) => r.split("/")[1])),
+];
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Bir yol yalnızca href="/…" biçiminde geçmiyor. RSC yükünde JSON olarak
+ * ("src":"/assets/…"), HTML'e gömülüyken kaçışlı JSON olarak (\"src\":\"/…\"),
+ * ön yükleme ipucu olarak (HL["/fonts/…"]) ve istemci paketini başlatan
+ * import("/assets/…") çağrısında da geçiyor. Öznitelik adını arayan bir kalıp
+ * bunların hiçbirini yakalamıyordu; sonuç olarak paket 404 alıyor, hidrasyon
+ * hiç olmuyor ve sayfadaki her düğme ölü kalıyordu.
+ *
+ * Bu yüzden özniteliği değil yolun kendisini hedefliyoruz: tırnak ya da
+ * parantezle başlayan ve bilinen bir kök adla devam eden her mutlak yol.
+ */
+const rootPattern = base
+  ? new RegExp(
+      `(["'(])/(${[...clientRoots, ...routeRoots].map(escapeRe).join("|")})(?=[/"'\\\\)#?]|$)`,
+      "g",
+    )
+  : null;
+
 /** Kök yolları depo alt dizinine kaydır: /assets/x → /depo-adi/assets/x */
 function applyBase(html) {
   if (!base) return html;
 
   return html
     .replace(/(href|src)="\/(?!\/)/g, `$1="${base}/`)
-    .replace(/url\(\/(?!\/)/g, `url(${base}/`);
+    .replace(/url\(\/(?!\/)/g, `url(${base}/`)
+    .replace(rootPattern, `$1${base}/$2`);
 }
 
 await rm(outDir, { recursive: true, force: true });
