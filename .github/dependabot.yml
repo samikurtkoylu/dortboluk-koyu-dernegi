@@ -1,5 +1,11 @@
 version: 2
 
+# pnpm 11 son 24 saat içinde yayınlanmış paketleri reddediyor
+# (ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION) — yeni çıkmış, henüz kimsenin
+# incelemediği bir sürüm zincire girmesin diye. Dependabot en yeni sürümü
+# önerdiğinde bu ikisi çakışıyor ve PR daha kurulum adımında düşüyor.
+# Aşağıdaki cooldown Dependabot'u pnpm'in eşiğinin arkasında tutar.
+
 # Workflow'lardaki action sürümlerini takip eder. Action'lar seyrek yayın
 # yaptığı için aylık tarama yeterli; hepsi tek grupta toplanıyor ki her
 # sürüm için ayrı ayrı PR açılmasın.
@@ -25,6 +31,15 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: deps
+    cooldown:
+      default-days: 3
+    ignore:
+      # Çalışma zamanı Node 22'ye sabitli (package.json engines, CI node-version).
+      # Tip paketi ileri bir major'a çıkarsa var olmayan API'leri varmış gibi
+      # gösterir; runtime yükselene kadar 22.x'te kalmalı.
+      - dependency-name: "@types/node"
+        update-types:
+          - version-update:semver-major
     groups:
       npm-kucuk-surumler:
         update-types:
