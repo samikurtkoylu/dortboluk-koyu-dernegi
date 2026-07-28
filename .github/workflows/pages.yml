@@ -12,6 +12,8 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  # deploy-pages v4'ten beri artifact'i kimlik numarasıyla çekiyor
+  actions: read
 
 # Aynı anda tek yayın çalışsın; devam eden yayın iptal edilmesin
 concurrency:
@@ -29,13 +31,14 @@ jobs:
       # Paylaşım kartlarındaki mutlak adresler bundan üretilir
       SITE_ORIGIN: https://samikurtkoylu.github.io/dortboluk-koyu-dernegi
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 11.9.0
 
-      - uses: actions/setup-node@v4
+      # pnpm'den sonra gelmeli: cache yolunu pnpm'e sorarak buluyor
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -48,11 +51,14 @@ jobs:
       - name: Statik dışa aktarım
         run: node scripts/export-static.mjs --base "$BASE_PATH"
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: out
+          # v4'ten beri nokta ile başlayan dosyalar varsayılan olarak atlanıyor;
+          # export .nojekyll yazdığı için açıkça dahil ediyoruz
+          include-hidden-files: true
 
   deploy:
     needs: build
@@ -62,4 +68,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
