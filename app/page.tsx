@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ScrollTop, SiteFooter, SiteHeader } from "./site-chrome";
+import { asset } from "./asset";
 
 /**
  * Manşetler köyün ve derneğin gerçek fotoğraflarından seçilir;
@@ -276,7 +277,7 @@ export default function Home() {
               <div className="hero-slide" key={slide.image} aria-hidden={activeSlide !== index}>
                 <Link href={slide.href} tabIndex={activeSlide === index ? undefined : -1}>
                   <img
-                    src={slide.image}
+                    src={asset(slide.image)}
                     alt=""
                     style={{ objectPosition: slide.position }}
                   />
@@ -385,9 +386,9 @@ export default function Home() {
                     controls
                     playsInline
                     preload="metadata"
-                    poster="/assets/eski/dernek-onunde-toplu.webp"
+                    poster={asset("/assets/eski/dernek-onunde-toplu.webp")}
                   >
-                    <source src="/assets/videolar/dernek-tanitim.mp4" type="video/mp4" />
+                    <source src={asset("/assets/videolar/dernek-tanitim.mp4")} type="video/mp4" />
                     Tarayıcınız video oynatmayı desteklemiyor.
                   </video>
                 </div>
@@ -450,7 +451,7 @@ export default function Home() {
                   {newsByTab[activeNews].map((item) => (
                     <article className="card" key={item.title}>
                       <Link href={item.href}>
-                        <img className="card-img" src={item.image} alt="" />
+                        <img className="card-img" src={asset(item.image)} alt="" />
                       </Link>
                       <div className="card-body">
                         <h3 className="card-title">
@@ -486,9 +487,9 @@ export default function Home() {
                     controls
                     playsInline
                     preload="metadata"
-                    poster="/assets/animeler/vadi-panorama.webp"
+                    poster={asset("/assets/animeler/vadi-panorama.webp")}
                   >
-                    <source src="/assets/videolar/koy-tanitim.mp4" type="video/mp4" />
+                    <source src={asset("/assets/videolar/koy-tanitim.mp4")} type="video/mp4" />
                     Tarayıcınız video oynatmayı desteklemiyor.
                   </video>
                 </div>

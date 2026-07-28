@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { asset } from "./asset";
 import { menu } from "./site-data";
 import {
   FacebookIcon,
@@ -53,7 +54,7 @@ export function SiteHeader() {
       <header className="mobile-header">
         <div className="mobile-header-bar">
           <Link className="header-logo" href="/" aria-label="Ana sayfa">
-            <img src="/logo-kucuk.png" alt="Dörtbölük Köyü Derneği amblemi" />
+            <img src={asset("/logo-kucuk.png")} alt="Dörtbölük Köyü Derneği amblemi" />
             <BrandCopy />
           </Link>
           <div className="mobile-actions">
@@ -106,7 +107,7 @@ export function SiteHeader() {
             href="/"
             aria-label="Elazığ Dörtbölük Köyü Derneği ana sayfa"
           >
-            <img src="/logo-kucuk.png" alt="Dörtbölük Köyü Derneği amblemi" />
+            <img src={asset("/logo-kucuk.png")} alt="Dörtbölük Köyü Derneği amblemi" />
             <BrandCopy />
           </Link>
 
@@ -206,7 +207,7 @@ export function SiteFooter() {
         <div className="footer-columns">
           <div className="footer-brand">
             <Link href="/">
-              <img src="/logo-kucuk.png" alt="" />
+              <img src={asset("/logo-kucuk.png")} alt="" />
               <span>
                 <strong>Dörtbölük</strong>
                 <small>KÖYÜ DERNEĞİ</small>

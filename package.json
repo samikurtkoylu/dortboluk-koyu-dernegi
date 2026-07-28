@@ -14,7 +14,7 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern outputs",
     "preview": "vinext build && wrangler versions upload",
     "deploy": "vinext build && wrangler deploy",
-    "export:pages": "vinext build && node scripts/export-static.mjs --base /dortboluk-koyu-dernegi",
+    "export:pages": "node scripts/export-static.mjs --base /dortboluk-koyu-dernegi --build",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {

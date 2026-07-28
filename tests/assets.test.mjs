@@ -4,6 +4,18 @@ import test from "node:test";
 import { pages } from "../app/content.ts";
 
 /**
+ * Sunucu, derlemede basePath verilmişse rotaları taban yolun altında karşılar.
+ * Testler yayındaki derlemeyi denediği için aynı öneki kullanmalı.
+ *
+ * Sayfadan toplanan bağlantılar öneki zaten taşıyor; bu yüzden ekleme
+ * tekrarlanabilir olmalı, yoksa taban yol iki kez yazılır.
+ */
+const BASE = process.env.BASE_PATH ?? "";
+const withBase = (path) =>
+  BASE && path.startsWith(`${BASE}/`) ? path : `${BASE}${path}`;
+
+
+/**
  * Render edilen HTML'deki her görsel/video dosyası public/ altında gerçekten
  * var olmalı. Kaynak kodda düz metin arayan bir denetim yetmez: galeri yolları
  * mezraPhotos() ile üretiliyor, yani ancak sayfa render edildiğinde ortaya
@@ -25,7 +37,7 @@ function getWorker() {
 async function html(path) {
   const worker = await getWorker();
   const response = await worker.fetch(
-    new Request(`http://localhost${path}`, {
+    new Request(`http://localhost${withBase(path)}`, {
       headers: { accept: "text/html", host: "localhost" },
     }),
     { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
@@ -37,9 +49,18 @@ async function html(path) {
   return response.text();
 }
 
+/**
+ * Sayfadaki yollar yayın taban yolunu taşıyor (/dortboluk-koyu-dernegi/…);
+ * dosya ise public/ altında öneksiz duruyor. Diskte ararken öneki düşürüyoruz.
+ */
+const stripBase = (path) =>
+  BASE && path.startsWith(`${BASE}/`) ? path.slice(BASE.length) : path;
+
 const exists = async (publicPath) => {
   try {
-    await access(new URL(`../public${decodeURI(publicPath)}`, import.meta.url));
+    await access(
+      new URL(`../public${decodeURI(stripBase(publicPath))}`, import.meta.url),
+    );
     return true;
   } catch {
     return false;

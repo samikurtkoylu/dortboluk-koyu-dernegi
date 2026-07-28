@@ -9,6 +9,7 @@ import {
   type Person,
   viceChairs,
 } from "./board-data";
+import { asset } from "./asset";
 
 type PanelProps = {
   id?: string;
@@ -105,7 +106,7 @@ export function OrgChart() {
       <figcaption>
         Derneğin resmî yönetim kurulu şemasından çizilmiştir; kurul üyeliklerinde
         değişiklik olduğunda güncellenir.{" "}
-        <a href="/assets/yonetim-semasi.jpg" target="_blank" rel="noreferrer">
+        <a href={asset("/assets/yonetim-semasi.jpg")} target="_blank" rel="noreferrer">
           Taranmış aslını görüntüleyin
         </a>
         .

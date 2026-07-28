@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { OrgChart } from "../org-chart";
 import { ScrollTop, SiteFooter, SiteHeader } from "../site-chrome";
+import { asset } from "../asset";
 
 export const metadata: Metadata = {
   title: "Yönetim ve Kurullarımız",
@@ -29,7 +30,7 @@ export default function Yonetim() {
       <main id="main">
         <div className="hero-edge-bg">
           <div className="hero-spacer hero-inset-shadow">
-            <img src="/assets/eski/dernek-onunde-toplu.webp" alt="Dörtbölük Köyü Derneği buluşması" />
+            <img src={asset("/assets/eski/dernek-onunde-toplu.webp")} alt="Dörtbölük Köyü Derneği buluşması" />
           </div>
         </div>
 
@@ -64,7 +65,7 @@ export default function Yonetim() {
                     </h2>
 
                     <figure className="image align-left">
-                      <img src="/assets/eski/dernek-onunde-toplu.webp" alt="Dernek buluşmasından bir kare" />
+                      <img src={asset("/assets/eski/dernek-onunde-toplu.webp")} alt="Dernek buluşmasından bir kare" />
                       <figcaption>
                         Elazığ Dörtbölük Köyü Derneği Yönetim Kurulu Başkanı Orhan Akyürek
                       </figcaption>
