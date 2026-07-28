@@ -2,6 +2,18 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 /**
+ * Sunucu, derlemede basePath verilmişse rotaları taban yolun altında karşılar.
+ * Testler yayındaki derlemeyi denediği için aynı öneki kullanmalı.
+ *
+ * Sayfadan toplanan bağlantılar öneki zaten taşıyor; bu yüzden ekleme
+ * tekrarlanabilir olmalı, yoksa taban yol iki kez yazılır.
+ */
+const BASE = process.env.BASE_PATH ?? "";
+const withBase = (path) =>
+  BASE && path.startsWith(`${BASE}/`) ? path : `${BASE}${path}`;
+
+
+/**
  * Sitedeki hiçbir bağlantı boşa düşmemeli.
  * Ana sayfadan başlayarak iç bağlantıları gezer, her birinin 200 döndüğünü
  * ve hedefte gerçek içerik olduğunu doğrular. Çapalı bağlantılarda (#...)
@@ -24,7 +36,7 @@ async function fetchPath(path) {
   const worker = await getWorker();
 
   return worker.fetch(
-    new Request(`http://localhost${path}`, {
+    new Request(`http://localhost${withBase(path)}`, {
       headers: { accept: "text/html", host: "localhost" },
     }),
     { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },

@@ -2,13 +2,25 @@ import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
+/**
+ * Sunucu, derlemede basePath verilmişse rotaları taban yolun altında karşılar.
+ * Testler yayındaki derlemeyi denediği için aynı öneki kullanmalı.
+ *
+ * Sayfadan toplanan bağlantılar öneki zaten taşıyor; bu yüzden ekleme
+ * tekrarlanabilir olmalı, yoksa taban yol iki kez yazılır.
+ */
+const BASE = process.env.BASE_PATH ?? "";
+const withBase = (path) =>
+  BASE && path.startsWith(`${BASE}/`) ? path : `${BASE}${path}`;
+
+
 async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request(`http://localhost${path}`, {
+    new Request(`http://localhost${withBase(path)}`, {
       headers: { accept: "text/html", host: "localhost" },
     }),
     {

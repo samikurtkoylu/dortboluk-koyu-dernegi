@@ -20,6 +20,11 @@ concurrency:
 jobs:
   dogrula:
     runs-on: ubuntu-latest
+    env:
+      # Yayındakiyle aynı taban yol. Derleme zamanında okunur (next.config.ts):
+      # JS parçalarının adresleri paketlerin içine gömüldüğü için sonradan
+      # düzeltilemiyor.
+      BASE_PATH: /dortboluk-koyu-dernegi
     steps:
       - uses: actions/checkout@v7
 

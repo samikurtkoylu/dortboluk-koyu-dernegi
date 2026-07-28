@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { asset } from "./asset";
 
 /**
  * Sitenin yayınlanacağı adres. Statik dışa aktarımda istek başlığı okunamaz,
@@ -58,21 +59,21 @@ export default function RootLayout({
       <head>
         <link
           rel="preload"
-          href="/fonts/barlow-latin-400.woff2"
+          href={asset("/fonts/barlow-latin-400.woff2")}
           as="font"
           type="font/woff2"
           crossOrigin=""
         />
         <link
           rel="preload"
-          href="/fonts/barlow-latin-ext-400.woff2"
+          href={asset("/fonts/barlow-latin-ext-400.woff2")}
           as="font"
           type="font/woff2"
           crossOrigin=""
         />
         <link
           rel="preload"
-          href="/fonts/barlow-latin-500.woff2"
+          href={asset("/fonts/barlow-latin-500.woff2")}
           as="font"
           type="font/woff2"
           crossOrigin=""

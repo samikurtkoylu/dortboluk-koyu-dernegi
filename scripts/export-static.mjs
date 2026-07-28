@@ -23,12 +23,54 @@ const base = rawBase.replace(/\/+$/, ""); // "/depo-adi" veya ""
 const { pages } = await import(new URL("../app/content.ts", import.meta.url).href);
 const routes = ["/", "/yonetim", ...pages.map((page) => `/${page.slug}`)];
 
+/**
+ * Taban yol artık derleme zamanı bir ayar (next.config.ts → basePath), çünkü
+ * JS parçalarının birbirini çağırdığı adresler paketlerin içine gömülüyor.
+ * --build verilirse derlemeyi doğru ortam değişkeniyle burada yapıyoruz ki
+ * tek komutla, ortam değişkenini elle vermeye gerek kalmadan çalışsın.
+ */
+if (process.argv.includes("--build")) {
+  const { execSync } = await import("node:child_process");
+  execSync("vinext build", {
+    stdio: "inherit",
+    env: { ...process.env, BASE_PATH: base },
+  });
+}
+
 const workerUrl = new URL("../dist/server/index.js", import.meta.url);
 const { default: worker } = await import(workerUrl.href);
 
+/**
+ * Derleme taban yolu bilmiyorsa çıktı sessizce bozuk olur: sayfalar üretilir
+ * ama tarayıcıda hiçbir JS çalışmaz. Yayına böyle bir paket gitmesin diye
+ * daha başta durduruyoruz.
+ */
+if (base) {
+  const probe = await worker.fetch(
+    new Request(`https://dortbolukkoyu.org${base}/`, {
+      headers: { accept: "text/html", host: "dortbolukkoyu.org" },
+    }),
+    { ASSETS: { fetch: async () => new Response("", { status: 404 }) } },
+    { waitUntil() {}, passThroughOnException() {} },
+  );
+
+  if (probe.status !== 200) {
+    throw new Error(
+      `Derleme "${base}" taban yoluyla yapılmamış (${base}/ → HTTP ${probe.status}).\n` +
+        `Çözüm: BASE_PATH=${base} vinext build  — ya da bu betiği --build ile çalıştırın.`,
+    );
+  }
+}
+
+/**
+ * basePath verildiğinde sunucu rotaları taban yolun altında karşılıyor, yani
+ * istekler /dortboluk-koyu-dernegi/mezralar adresine gitmeli. Diske yazarken
+ * taban yol tekrar düşürülüyor: dosyalar out/ kökünde duruyor ve GitHub Pages
+ * out/'u zaten taban yolun altında sunuyor.
+ */
 async function render(route) {
   const response = await worker.fetch(
-    new Request(`https://dortbolukkoyu.org${route}`, {
+    new Request(`https://dortbolukkoyu.org${base}${route}`, {
       headers: { accept: "text/html", host: "dortbolukkoyu.org" },
     }),
     { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
@@ -43,43 +85,42 @@ async function render(route) {
 }
 
 /**
- * Kaydırılması gereken kök adlar: derlenmiş istemci çıktısının en üst düzeyi
- * (assets/, fonts/, favicon.svg, …) ve rotaların ilk parçası (mezralar,
- * hakkimizda, …). Bunlar bilinmeden yol mu yoksa düz metin mi olduğu
- * ayırt edilemez.
+ * Çerçevenin ürettiği adresler (JS parçaları, CSS, istemci yönlendiricisinin
+ * .rsc istekleri) artık next.config.ts'teki basePath sayesinde derleme anında
+ * öneklendiği için burada onlara dokunulmuyor.
+ *
+ * Geriye içerikten gelen varlık yolları kalıyor: app/content.ts içindeki
+ * "/assets/mezralar/…" gibi değerler düz <img src> olarak basılıyor ve
+ * basePath bunları öneklemiyor. Aşağıdaki kalıp yalnızca bunları kaydırır.
+ *
+ * Kök adlar derlenmiş istemci çıktısının en üst düzeyinden okunuyor
+ * (assets/, fonts/, favicon.svg, …); elle liste tutulmuyor ki yeni bir
+ * klasör eklendiğinde kendiliğinden kapsansın.
  */
 const clientRoots = await readdir(join(root, "dist", "client"));
-const routeRoots = [
-  ...new Set(routes.filter((r) => r !== "/").map((r) => r.split("/")[1])),
-];
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /**
- * Bir yol yalnızca href="/…" biçiminde geçmiyor. RSC yükünde JSON olarak
- * ("src":"/assets/…"), HTML'e gömülüyken kaçışlı JSON olarak (\"src\":\"/…\"),
- * ön yükleme ipucu olarak (HL["/fonts/…"]) ve istemci paketini başlatan
- * import("/assets/…") çağrısında da geçiyor. Öznitelik adını arayan bir kalıp
- * bunların hiçbirini yakalamıyordu; sonuç olarak paket 404 alıyor, hidrasyon
- * hiç olmuyor ve sayfadaki her düğme ölü kalıyordu.
+ * Yol yalnızca src="/…" biçiminde geçmiyor: RSC yükünde JSON olarak
+ * ("src":"/assets/…"), HTML'e gömülüyken kaçışlı JSON olarak
+ * (\"src\":\"/…\") ve ön yükleme ipucu olarak (HL["/fonts/…"]) da geçiyor.
+ * Bu yüzden özniteliği değil yolun kendisini hedefliyoruz.
  *
- * Bu yüzden özniteliği değil yolun kendisini hedefliyoruz: tırnak ya da
- * parantezle başlayan ve bilinen bir kök adla devam eden her mutlak yol.
+ * Öndeki (?!…) zaten öneklenmiş yolları dışarıda bırakır — aksi halde
+ * basePath'in ürettiği adresler ikinci kez kaydırılırdı.
  */
 const rootPattern = base
   ? new RegExp(
-      `(["'(])/(${[...clientRoots, ...routeRoots].map(escapeRe).join("|")})(?=[/"'\\\\)#?]|$)`,
+      `(["'(])/(?!${escapeRe(base.slice(1))}/)(${clientRoots.map(escapeRe).join("|")})(?=[/"'\\\\)#?]|$)`,
       "g",
     )
   : null;
 
-/** Kök yolları depo alt dizinine kaydır: /assets/x → /depo-adi/assets/x */
+/** İçerik varlıklarını depo alt dizinine kaydır: /assets/x → /depo-adi/assets/x */
 function applyBase(html) {
   if (!base) return html;
 
-  return html
-    .replace(/(href|src)="\/(?!\/)/g, `$1="${base}/`)
-    .replace(/url\(\/(?!\/)/g, `url(${base}/`)
-    .replace(rootPattern, `$1${base}/$2`);
+  return html.replace(rootPattern, `$1${base}/$2`);
 }
 
 await rm(outDir, { recursive: true, force: true });
@@ -93,7 +134,7 @@ await mkdir(outDir, { recursive: true });
 async function renderRsc(route) {
   const path = route === "/" ? "/.rsc" : `${route}.rsc`;
   const response = await worker.fetch(
-    new Request(`https://dortbolukkoyu.org${path}?_rsc`, {
+    new Request(`https://dortbolukkoyu.org${base}${path}?_rsc`, {
       headers: { host: "dortbolukkoyu.org" },
     }),
     { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Clock3, Hammer } from "lucide-react";
 import { type Block, groups, pageBySlug, pages, pagesInGroup } from "../content";
 import { ScrollTop, SiteFooter, SiteHeader } from "../site-chrome";
+import { asset } from "../asset";
 
 type Props = { params: Promise<{ slug: string[] }> };
 
@@ -59,7 +60,7 @@ function Blocks({ blocks }: { blocks: Block[] }) {
               <figure className="content-gallery" key={index}>
                 <div className="gallery-grid">
                   {block.images.map((src) => (
-                    <img alt="" key={src} loading="lazy" src={src} />
+                    <img alt="" key={src} loading="lazy" src={asset(src)} />
                   ))}
                 </div>
                 {block.caption ? <figcaption>{block.caption}</figcaption> : null}
@@ -68,7 +69,7 @@ function Blocks({ blocks }: { blocks: Block[] }) {
           case "figure":
             return (
               <figure className="image" key={index}>
-                <img alt={block.caption ?? ""} src={block.src} />
+                <img alt={block.caption ?? ""} src={asset(block.src)} />
                 {block.caption ? <figcaption>{block.caption}</figcaption> : null}
               </figure>
             );
