@@ -1,0 +1,8 @@
+# pnpm 11, kurulum script'i çalıştırmayan paketleri hata sayıyor
+# (ERR_PNPM_IGNORED_BUILDS). Bu paketlerin script'leri platform ikililerini
+# yerine koyduğu için derleme onlarsız çalışmıyor; burada açıkça onaylanıyorlar.
+allowBuilds:
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+  workerd: true
