@@ -1,0 +1,17 @@
+version: 2
+
+# Workflow'lardaki action sürümlerini takip eder. Action'lar seyrek yayın
+# yaptığı için aylık tarama yeterli; hepsi tek grupta toplanıyor ki her
+# sürüm için ayrı ayrı PR açılmasın.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns:
+          - "*"
