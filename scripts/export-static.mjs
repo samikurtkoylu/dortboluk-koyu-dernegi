@@ -216,6 +216,20 @@ const legacyRedirects = {
 
 for (const [from, to] of Object.entries(legacyRedirects)) {
   const target = `${base}${to}`;
+
+  /**
+   * GitHub Pages uzantısız bir adres için önce "<ad>.html" dosyasına bakar,
+   * dizindeki index.html'e sonra. Eski adın karşılığı gerçek bir sayfaysa
+   * (iletisim.html ↔ /iletisim) yönlendirme kütüğü o sayfayı gölgeler ve
+   * kendine yönlendirdiği için sonsuz döngü olur. Böyle durumlarda kütük
+   * değil sayfanın kendisi yazılıyor: her iki adres de gerçek içeriği verir.
+   */
+  const realPage = join(outDir, from.replace(/\.html$/, ""), "index.html");
+  if (await stat(realPage).then(() => true).catch(() => false)) {
+    await writeFile(join(outDir, from), await readFile(realPage, "utf8"), "utf8");
+    continue;
+  }
+
   await writeFile(
     join(outDir, from),
     `<!doctype html>
