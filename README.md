@@ -1,98 +1,134 @@
-# vinext-starter
+# Elazığ Dörtbölük Köyü Derneği
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+Derneğin tanıtım sitesi: köyün tarihi, mezralar, faaliyetler, yönetim kurulu,
+duyurular ve iletişim bilgileri.
 
-## Prerequisites
+**Yayında:** https://samikurtkoylu.github.io/dortboluk-koyu-dernegi/
+
+Site sunucu tarafında render edilen bir Next.js uygulaması olarak yazıldı, ama
+GitHub Pages yalnızca dosya sunduğu için yayına **statik olarak dışa aktarılıyor**.
+Bu ayrım aşağıdaki birkaç kararı açıklıyor.
+
+## Gereksinimler
 
 - Node.js `>=22.13.0`
+- pnpm `11.9.0` (`packageManager` alanında sabitli; `corepack enable` yeterli)
 
-## Quick Start
+## Başlarken
 
 ```bash
-npm install
-npm run dev
-npm run build
+pnpm install
+pnpm dev
 ```
 
-This starter does not use `wrangler.jsonc`.
+## Komutlar
 
-## Included Shape
+| Komut | Ne yapar |
+| --- | --- |
+| `pnpm dev` | Geliştirme sunucusu |
+| `pnpm build` | Derleme çıktısını `dist/` altına üretir |
+| `pnpm test` | Derler, sonra `tests/` altındaki 8 testi çalıştırır |
+| `pnpm lint` | ESLint |
+| `pnpm export:pages` | Derler ve statik siteyi `out/` altına yazar |
+| `pnpm run db:generate` | Drizzle migration üretir (şu an kullanılmıyor) |
 
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+> `pnpm run deploy` bu tabloda yok çünkü **gerçek bir yayın tetikler** —
+> şablondan kalan Cloudflare Workers hedefine `wrangler deploy` çalıştırır.
+> Sitenin yayını GitHub Pages üzerinden yapılıyor; bu komuta ihtiyaç yok.
 
-## Workspace Auth Headers
+## İçerik nasıl düzenlenir
 
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
+Sayfa metinleri koda gömülü değil, üç veri dosyasında toplanıyor:
 
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+- **[app/content.ts](app/content.ts)** — 51 içerik sayfası. Her sayfa bir `slug`,
+  başlık, hero görseli ve `blocks` dizisinden oluşuyor (`p`, `h`, `ul`, `facts`,
+  `gallery`, `figure`, `note`, `cta`). [app/\[...slug\]/page.tsx](<app/[...slug]/page.tsx>)
+  bu kayıttan sayfayı üretir; yeni sayfa için buraya bir kayıt eklemek yeterli.
+  `status: "soon"` verilen sayfalar "yapım aşamasında" paneliyle açılır.
+- **[app/site-data.ts](app/site-data.ts)** — üst menü ve alt bilgi bağlantıları.
+- **[app/board-data.ts](app/board-data.ts)** — yönetim kurulu listesi; hem
+  `/yonetim` sayfası hem de şema bileşeni bunu kullanır.
 
-Treat the full name as optional and fall back to email when it is absent:
+Menüye bağlantı ekleyip karşılığını `content.ts`'e eklemeyi unutursan test
+bunu yakalar (aşağıya bakın).
 
-```tsx
-import { headers } from "next/headers";
+Ana sayfa ayrı: [app/page.tsx](app/page.tsx). Yönetim sayfası:
+[app/yonetim/page.tsx](app/yonetim/page.tsx).
 
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
+## Görseller
 
-  const displayName = fullName ?? email;
-  // ...
-}
-```
+`public/assets/` altında, yaklaşık 43 MB. Fotoğraflar WebP; PNG kayıpsız bir
+biçim olduğu için fotoğrafta gereksiz yere büyük kalıyor.
+[scripts/convert-images.mjs](scripts/convert-images.mjs) dönüştürmeyi yapar ve
+koddaki yolları günceller. Paylaşım kartı görselleri (`og-*.png`) ve
+`logo-kucuk.png` bilerek dışarıda: bazı sosyal medya botları WebP okumuyor.
 
-## Optional Dispatch-Owned ChatGPT Sign-In
+Sayfalarda `next/image` yerine düz `<img>` kullanılıyor — statik dışa aktarımda
+görsel optimizasyon sunucusu bulunmuyor. ESLint bunun için 11 uyarı veriyor;
+uyarılar bilinçli, hata değil.
 
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
+## Testler
 
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
+`pnpm test` derleyip [tests/](tests/) altındaki 8 testi çalıştırır. Testler
+derlenmiş worker'ı doğrudan çağırıp yanıtları inceliyor:
 
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
+- kırık görsel veya video yok (koddaki her yol `public/` altında gerçekten var)
+- dosya adlarında URL'yi bozacak karakter yok
+- boşta bağlantı yok (menüdeki her `href` bir sayfaya karşılık geliyor)
+- her sayfa gerçek içerik döndürüyor, bilinmeyen adres 404 veriyor
+- yönetim sayfası gerçek kurul listesini basıyor
+- şablondan kalan dosyalar siteye sızmamış
 
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
+## Yayın
 
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
+`main`'e her push'ta [.github/workflows/pages.yml](.github/workflows/pages.yml)
+çalışır: kurulum → testler → statik dışa aktarım → GitHub Pages.
 
-## Useful Commands
+Dışa aktarımı [scripts/export-static.mjs](scripts/export-static.mjs) yapar.
+vinext'te export komutu olmadığı için betik derlenmiş worker'ı doğrudan çağırıp
+her rotanın HTML'ini diske yazar (53 sayfa: ana sayfa + `/yonetim` + 51 içerik
+sayfası), sonra statik dosyaları yanına kopyalar. Ayrıca:
 
-- `npm run dev`: start local development
-- `npm run build`: verify the vinext build output
-- `npm test`: build the starter and verify its rendered loading skeleton
-- `npm run db:generate`: generate Drizzle migrations after schema changes
+- Her sayfanın `.rsc` yükü de yazılır. `next/link` gezinirken önce bunu ister;
+  olmazsa her tıklama 404 alıp tam sayfa yüklemesine düşerdi.
+- `.nojekyll` ve `404.html` üretilir. GitHub Pages bilinmeyen adreslerde
+  `404.html`'i kendiliğinden kullanır.
 
-## Learn More
+### Adres ve taban yol
 
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+Site depo alt dizininde yayınlandığı için iki değer workflow'da tanımlı
+([pages.yml](.github/workflows/pages.yml)):
+
+- `BASE_PATH` — tüm kök yolları `/dortboluk-koyu-dernegi/` önekine kaydırır.
+- `SITE_ORIGIN` — paylaşım kartlarındaki mutlak adresler bundan üretilir
+  ([app/layout.tsx](app/layout.tsx)). Statik çıktıda istek başlığı okunamadığı
+  için origin derleme zamanında sabitlenmek zorunda.
+
+**Özel alan adı bağlarsan:** `BASE_PATH`'i boşalt, `SITE_ORIGIN`'i yeni adrese
+çevir, alan adını depo ayarlarından (Settings → Pages) tanımla. `BASE_PATH` dolu
+kalırsa varlıklar var olmayan bir alt dizinden istenir.
+
+## CI ve bağımlılıklar
+
+- [.github/workflows/ci.yml](.github/workflows/ci.yml) — pull request'lerde lint,
+  test ve dışa aktarımı çalıştırır; yayın yapmaz. Export adımı yayındakiyle aynı
+  taban yolu kullanır, böylece bir rota bozulduğunda deploy anında değil PR'da
+  görünür.
+- [.github/dependabot.yml](.github/dependabot.yml) — action ve paket
+  sürümlerini aylık tarar. Minör/yama güncellemeleri tek PR'da toplanır,
+  major'lar ayrı gelir.
+
+## Şablondan kalanlar
+
+Proje `vinext-starter` şablonundan türedi ve bazı parçaları kullanılmadan duruyor.
+Silmeden önce bilinsin diye not düşülüyor:
+
+- **Cloudflare Workers** — [worker/index.ts](worker/index.ts) ve
+  [vite.config.ts](vite.config.ts) içindeki satır içi Cloudflare yapılandırması
+  (ayrı bir `wrangler.jsonc` yok) sitenin özgün hedefiydi. Yayın GitHub Pages'e
+  alındı; worker artık yalnızca statik dışa aktarımda render motoru olarak
+  kullanılıyor.
+- **D1 / R2** — `.openai/hosting.json` içinde ikisi de `null`,
+  [db/schema.ts](db/schema.ts) boş. Site veritabanı kullanmıyor.
+- **ChatGPT oturum açma** — [app/chatgpt-auth.ts](app/chatgpt-auth.ts) hiçbir
+  sayfada çağrılmıyor; site tamamen herkese açık.
