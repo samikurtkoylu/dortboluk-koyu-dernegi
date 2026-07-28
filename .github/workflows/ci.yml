@@ -1,0 +1,47 @@
+name: CI
+
+# Pull request'lerde lint, test ve statik dışa aktarımı doğrular.
+# Yayın yapmaz — deploy yalnızca main'e push'ta pages.yml ile olur.
+# Dependabot'un açtığı güncelleme PR'ları da bu kapıdan geçer.
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Aynı dala yeni push gelirse önceki koşuyu iptal et
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dogrula:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.9.0
+
+      # pnpm'den sonra gelmeli: cache yolunu pnpm'e sorarak buluyor
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Testler
+        run: pnpm test
+
+      # Yayındakiyle aynı taban yol: export'un kırıldığını deploy anında
+      # değil, PR'da yakalayalım
+      - name: Statik dışa aktarım
+        run: node scripts/export-static.mjs --base /dortboluk-koyu-dernegi
