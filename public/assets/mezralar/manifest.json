@@ -1,0 +1,72 @@
+{
+  "sourceShareUrl": "https://www.facebook.com/share/1EpWTN653x/",
+  "sourcePageUrl": "https://www.facebook.com/PerdikEfsaneleri",
+  "retrievedAt": "2026-07-27",
+  "totalDownloadedImages": 175,
+  "albums": [
+    {
+      "name": "Cellatlar",
+      "folder": "cellatlar",
+      "albumUrl": "https://www.facebook.com/media/set/?set=a.388312331262326&type=3",
+      "listedItems": 300,
+      "downloadedPublicImages": 22,
+      "status": "public_access_limited"
+    },
+    {
+      "name": "Haraba",
+      "folder": "haraba",
+      "albumUrl": "https://www.facebook.com/media/set/?set=a.388304481263111&type=3",
+      "listedItems": 11,
+      "downloadedPublicImages": 11,
+      "status": "complete"
+    },
+    {
+      "name": "Delolar",
+      "folder": "delolar",
+      "albumUrl": "https://www.facebook.com/media/set/?set=a.388305891262970&type=3",
+      "listedItems": 68,
+      "downloadedPublicImages": 36,
+      "status": "public_access_limited"
+    },
+    {
+      "name": "Gedik (Aşağı Köy)",
+      "folder": "gedik/asagi-koy",
+      "albumUrl": "https://www.facebook.com/media/set/?set=a.388308701262689&type=3",
+      "listedItems": 51,
+      "downloadedPublicImages": 36,
+      "status": "public_access_limited"
+    },
+    {
+      "name": "Kaldırım",
+      "folder": "kaldirim",
+      "albumUrl": "https://www.facebook.com/media/set/?set=a.388302954596597&type=3",
+      "listedItems": 16,
+      "downloadedPublicImages": 16,
+      "status": "complete"
+    },
+    {
+      "name": "Gedik (Yukarı Köy)",
+      "folder": "gedik/yukari-koy",
+      "albumUrl": "https://www.facebook.com/media/set/?set=a.388307337929492&type=3",
+      "listedItems": 18,
+      "downloadedPublicImages": 18,
+      "status": "complete"
+    },
+    {
+      "name": "Perdik",
+      "folder": "perdik-merkez",
+      "albumUrl": "https://www.facebook.com/media/set/?set=a.388324904594402&type=3",
+      "listedItems": 47,
+      "downloadedPublicImages": 36,
+      "status": "public_access_limited"
+    }
+  ],
+  "missingAlbums": [
+    {
+      "name": "Suludere",
+      "folder": "suludere",
+      "status": "no_public_album_found"
+    }
+  ],
+  "note": "Facebook, oturum açmamış ziyaretçilere bazı uzun albümlerin yalnızca bir bölümünü gösterdiği için public_access_limited durumundaki klasörler albümün herkese açık kısmını içerir."
+}

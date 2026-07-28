@@ -1,0 +1,65 @@
+name: GitHub Pages
+
+# Siteyi derleyip statik olarak dışa aktarır ve GitHub Pages'e yayınlar.
+# Derleme çıktısı depoya işlenmez; her yayında yeniden üretilir.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Aynı anda tek yayın çalışsın; devam eden yayın iptal edilmesin
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # Depo alt dizininde yayınlanıyorsa taban yol gerekir:
+      #   https://<kullanici>.github.io/dortboluk-koyu-dernegi/
+      # Özel alan adı (CNAME) kullanacaksanız bu değeri boş bırakın.
+      BASE_PATH: /dortboluk-koyu-dernegi
+      # Paylaşım kartlarındaki mutlak adresler bundan üretilir
+      SITE_ORIGIN: https://samikurtkoylu.github.io/dortboluk-koyu-dernegi
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Testler
+        run: pnpm test
+
+      - name: Statik dışa aktarım
+        run: node scripts/export-static.mjs --base "$BASE_PATH"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
